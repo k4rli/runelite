@@ -55,6 +55,12 @@ public class CustomMenuSwapperPlugin extends Plugin {
             } else if (config.dropFish() && (target.contains("raw") || target.contains("leaping"))) {
                 swap("drop", option, target, true);
             }
+        } else if (option.equals("eat")) {
+            if (config.disableFruitEat() && target.contains("papaya")) {
+                swap("use", option, target, true);
+            }
+        } else if (config.disableHerbClean() && option.equals("clean") && target.contains("grimy")) {
+            swap("use", option, target, true);
         }
     }
 

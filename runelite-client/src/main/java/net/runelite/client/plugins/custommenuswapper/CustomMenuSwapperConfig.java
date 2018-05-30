@@ -39,4 +39,24 @@ public interface CustomMenuSwapperConfig extends Config  {
     default boolean dropFish() {
         return false;
     }
+
+    @ConfigItem(
+            position = 4,
+            keyName = "disableHerbClean",
+            name = "Disable clean herb",
+            description = "Disable accidental left click herb cleaning."
+    )
+    default boolean disableHerbClean() {
+        return false;
+    }
+
+    @ConfigItem(
+            position = 5,
+            keyName = "disableFarmFruitEat",
+            name = "Disable eating farming payment",
+            description = "Disable accidental eating of Papaya fruit for Farming."
+    )
+    default boolean disableFruitEat() {
+        return false;
+    }
 }
