@@ -47,7 +47,7 @@ public interface CustomMenuSwapperConfig extends Config  {
             description = "Disable accidental left click herb cleaning."
     )
     default boolean disableHerbClean() {
-        return false;
+        return true;
     }
 
     @ConfigItem(
@@ -57,6 +57,16 @@ public interface CustomMenuSwapperConfig extends Config  {
             description = "Disable accidental eating of Papaya fruit for Farming."
     )
     default boolean disableFruitEat() {
-        return false;
+        return true;
+    }
+
+    @ConfigItem(
+            position = 6,
+            keyName = "dropFarmingShit",
+            name = "Drop empty farming shit",
+            description = "Drop buckets and empty pots for Farming."
+    )
+    default boolean dropFarmingShit() {
+        return true;
     }
 }
