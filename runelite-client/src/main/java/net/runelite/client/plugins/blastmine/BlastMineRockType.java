@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Adam <Adam@sigterm.info>
+ * Copyright (c) 2018, Unmoon <https://github.com/Unmoon>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,32 +22,44 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.client.plugins.prayflick;
+package net.runelite.client.plugins.blastmine;
 
-import com.google.common.eventbus.Subscribe;
-import javax.inject.Inject;
-import net.runelite.api.events.GameTick;
-import net.runelite.client.plugins.Plugin;
-import net.runelite.client.plugins.PluginDescriptor;
-import net.runelite.client.ui.overlay.Overlay;
+import java.util.HashMap;
+import java.util.Map;
+import lombok.Getter;
+import net.runelite.api.ObjectID;
 
-@PluginDescriptor(
-	name = "Prayer Flicking"
-)
-public class PrayerFlickPlugin extends Plugin
+public enum BlastMineRockType
 {
-	@Inject
-	private PrayerFlickOverlay overlay;
+	NORMAL(ObjectID.HARD_ROCK, ObjectID.HARD_ROCK_28580),
+	CHISELED(ObjectID.CAVITY, ObjectID.CAVITY_28582),
+	LOADED(ObjectID.POT_OF_DYNAMITE, ObjectID.POT_OF_DYNAMITE_28584),
+	LIT(ObjectID.POT_OF_DYNAMITE_28585, ObjectID.POT_OF_DYNAMITE_28586),
+	EXPLODED(ObjectID.SHATTERED_ROCKFACE, ObjectID.SHATTERED_ROCKFACE_28588);
 
-	@Override
-	public Overlay getOverlay()
+	private static final Map<Integer, BlastMineRockType> rockTypes = new HashMap<>();
+
+	static
 	{
-		return overlay;
+		for (BlastMineRockType type : values())
+		{
+			for (int spotId : type.getObjectIds())
+			{
+				rockTypes.put(spotId, type);
+			}
+		}
 	}
 
-	@Subscribe
-	public void onTick(GameTick tick)
+	@Getter
+	private final int[] objectIds;
+
+	BlastMineRockType(int... objectIds)
 	{
-		overlay.onTick();
+		this.objectIds = objectIds;
+	}
+
+	public static BlastMineRockType getRockType(int objectId)
+	{
+		return rockTypes.get(objectId);
 	}
 }

@@ -51,6 +51,7 @@ import static net.runelite.client.plugins.timers.GameTimer.ANTIVENOM;
 import static net.runelite.client.plugins.timers.GameTimer.ANTIVENOMPLUS;
 import static net.runelite.client.plugins.timers.GameTimer.BIND;
 import static net.runelite.client.plugins.timers.GameTimer.CANNON;
+import static net.runelite.client.plugins.timers.GameTimer.CHARGE;
 import static net.runelite.client.plugins.timers.GameTimer.ENTANGLE;
 import static net.runelite.client.plugins.timers.GameTimer.EXANTIFIRE;
 import static net.runelite.client.plugins.timers.GameTimer.EXSUPERANTIFIRE;
@@ -71,6 +72,7 @@ import static net.runelite.client.plugins.timers.GameTimer.OVERLOAD_RAID;
 import static net.runelite.client.plugins.timers.GameTimer.PRAYER_ENHANCE;
 import static net.runelite.client.plugins.timers.GameTimer.SANFEW;
 import static net.runelite.client.plugins.timers.GameTimer.SNARE;
+import static net.runelite.client.plugins.timers.GameTimer.STAFF_OF_THE_DEAD;
 import static net.runelite.client.plugins.timers.GameTimer.STAMINA;
 import static net.runelite.client.plugins.timers.GameTimer.SUPERANTIFIRE;
 import static net.runelite.client.plugins.timers.GameTimer.SUPERANTIPOISON;
@@ -83,6 +85,7 @@ import net.runelite.client.ui.overlay.infobox.InfoBoxManager;
 )
 public class TimersPlugin extends Plugin
 {
+	private int lastEquippedWeapVarb;
 	private int lastRaidVarb;
 
 	@Inject
@@ -109,6 +112,12 @@ public class TimersPlugin extends Plugin
 	@Subscribe
 	public void onVarbitChange(VarbitChanged event)
 	{
+		int equippedWeap = client.getVar(Varbits.EQUIPPED_WEAPON_TYPE);
+		if (lastEquippedWeapVarb != equippedWeap)
+		{
+			removeGameTimer(STAFF_OF_THE_DEAD);
+		}
+
 		int raidVarb = client.getVar(Varbits.IN_RAID);
 		if (lastRaidVarb != raidVarb)
 		{
@@ -121,46 +130,9 @@ public class TimersPlugin extends Plugin
 	@Subscribe
 	public void updateConfig(ConfigChanged event)
 	{
-		if (!config.showStamina())
+		if (!config.showAntidotePlus())
 		{
-			removeGameTimer(STAMINA);
-		}
-
-		if (!config.showAntiFire())
-		{
-			removeGameTimer(ANTIFIRE);
-		}
-
-		if (!config.showExAntiFire())
-		{
-			removeGameTimer(EXANTIFIRE);
-		}
-
-		if (!config.showOverload())
-		{
-			removeGameTimer(OVERLOAD);
-			removeGameTimer(OVERLOAD_RAID);
-		}
-
-		if (!config.showCannon())
-		{
-			removeGameTimer(CANNON);
-		}
-
-		if (!config.showMagicImbue())
-		{
-			removeGameTimer(MAGICIMBUE);
-		}
-
-		if (!config.showTeleblock())
-		{
-			removeGameTimer(FULLTB);
-			removeGameTimer(HALFTB);
-		}
-
-		if (!config.showSuperAntiFire())
-		{
-			removeGameTimer(SUPERANTIFIRE);
+			removeGameTimer(ANTIDOTEPLUS);
 		}
 
 		if (!config.showAntidotePlusPlus())
@@ -168,9 +140,9 @@ public class TimersPlugin extends Plugin
 			removeGameTimer(ANTIDOTEPLUSPLUS);
 		}
 
-		if (!config.showAntidotePlus())
+		if (!config.showSanfew())
 		{
-			removeGameTimer(ANTIDOTEPLUS);
+			removeGameTimer(SANFEW);
 		}
 
 		if (!config.showAntiVenom())
@@ -183,9 +155,60 @@ public class TimersPlugin extends Plugin
 			removeGameTimer(ANTIVENOMPLUS);
 		}
 
-		if (!config.showSanfew())
+		if (!config.showAntiFire())
 		{
-			removeGameTimer(SANFEW);
+			removeGameTimer(ANTIFIRE);
+		}
+
+		if (!config.showExAntiFire())
+		{
+			removeGameTimer(EXANTIFIRE);
+		}
+
+		if (!config.showSuperAntiFire())
+		{
+			removeGameTimer(SUPERANTIFIRE);
+		}
+
+		if (!config.showStamina())
+		{
+			removeGameTimer(STAMINA);
+		}
+
+		if (!config.showOverload())
+		{
+			removeGameTimer(OVERLOAD);
+			removeGameTimer(OVERLOAD_RAID);
+		}
+
+		if (!config.showPrayerEnhance())
+		{
+			removeGameTimer(PRAYER_ENHANCE);
+		}
+
+		if (!config.showCannon())
+		{
+			removeGameTimer(CANNON);
+		}
+
+		if (!config.showMagicImbue())
+		{
+			removeGameTimer(MAGICIMBUE);
+		}
+
+		if (!config.showCharge())
+		{
+			removeGameTimer(CHARGE);
+		}
+
+		if (!config.showImbuedHeart())
+		{
+			removeGameTimer(IMBUEDHEART);
+		}
+
+		if (!config.showStaffOfTheDead())
+		{
+			removeGameTimer(STAFF_OF_THE_DEAD);
 		}
 
 		if (!config.showVengeance())
@@ -198,9 +221,10 @@ public class TimersPlugin extends Plugin
 			removeGameTimer(VENGEANCEOTHER);
 		}
 
-		if (!config.showImbuedHeart())
+		if (!config.showTeleblock())
 		{
-			removeGameTimer(IMBUEDHEART);
+			removeGameTimer(FULLTB);
+			removeGameTimer(HALFTB);
 		}
 
 		if (!config.showFreezes())
@@ -215,11 +239,6 @@ public class TimersPlugin extends Plugin
 			removeGameTimer(ICEBURST);
 			removeGameTimer(ICEBLITZ);
 			removeGameTimer(ICEBARRAGE);
-		}
-
-		if (!config.showPrayerEnhance())
-		{
-			removeGameTimer(PRAYER_ENHANCE);
 		}
 	}
 
@@ -396,6 +415,16 @@ public class TimersPlugin extends Plugin
 		{
 			createGameTimer(PRAYER_ENHANCE);
 		}
+
+		if (config.showCharge() && event.getMessage().equals("<col=ef1020>You feel charged with magic power.</col>"))
+		{
+			createGameTimer(CHARGE);
+		}
+
+		if (event.getMessage().equals("<col=ef1020>Your magical charge fades away.</col>"))
+		{
+			removeGameTimer(CHARGE);
+		}
 	}
 
 	@Subscribe
@@ -433,6 +462,11 @@ public class TimersPlugin extends Plugin
 		if (config.showVengeance() && actor.getGraphic() == VENGEANCE.getGraphicId())
 		{
 			createGameTimer(VENGEANCE);
+		}
+
+		if (config.showStaffOfTheDead() && actor.getGraphic() == STAFF_OF_THE_DEAD.getGraphicId())
+		{
+			createGameTimer(STAFF_OF_THE_DEAD);
 		}
 
 		if (config.showFreezes())

@@ -59,12 +59,12 @@ public interface GrandExchangeConfig extends Config
 
 	@ConfigItem(
 		position = 3,
-		keyName = "notificationDelay",
-		name = "Notification Delay",
-		description = "Number of seconds between notifications on offer updates"
+		keyName = "enableOsbPrices",
+		name = "Enable OSB actively traded prices",
+		description = "Shows the OSBuddy actively traded price at the GE"
 	)
-	default int notificationDelay()
+	default boolean enableOsbPrices()
 	{
-		return 5;
+		return true;
 	}
 }

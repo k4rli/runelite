@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Unmoon <https://github.com/Unmoon>
+ * Copyright (c) 2018, Raqes <j.raqes@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,52 +22,49 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.client.plugins.tithefarm;
+package net.runelite.client.plugins.prayer;
 
-import java.awt.Color;
-import java.util.HashMap;
-import java.util.Map;
-import lombok.Getter;
-import net.runelite.api.ItemID;
+import net.runelite.client.config.Config;
+import net.runelite.client.config.ConfigGroup;
+import net.runelite.client.config.ConfigItem;
 
-enum WateringCan
+@ConfigGroup(
+	keyName = "prayer",
+	name = "Prayer",
+	description = "Various tools related to prayer"
+)
+public interface PrayerConfig extends Config
 {
-	WATERING_CAN0(ItemID.WATERING_CAN, 0, Color.RED),
-	WATERING_CAN1(ItemID.WATERING_CAN1, 1, Color.ORANGE),
-	WATERING_CAN2(ItemID.WATERING_CAN2, 2, Color.YELLOW),
-	WATERING_CAN3(ItemID.WATERING_CAN3, 3, Color.WHITE),
-	WATERING_CAN4(ItemID.WATERING_CAN4, 4, Color.WHITE),
-	WATERING_CAN5(ItemID.WATERING_CAN5, 5, Color.WHITE),
-	WATERING_CAN6(ItemID.WATERING_CAN6, 6, Color.WHITE),
-	WATERING_CAN7(ItemID.WATERING_CAN7, 7, Color.WHITE),
-	WATERING_CAN8(ItemID.WATERING_CAN8, 8, Color.WHITE);
-
-	@Getter
-	private final int id;
-	@Getter
-	private final int charges;
-	@Getter
-	private final Color color;
-
-	private static final Map<Integer, WateringCan> wateringCans = new HashMap<>();
-
-	static
+	@ConfigItem(
+		position = 0,
+		keyName = "prayerflick",
+		name = "Prayer flick helper",
+		description = "Enable the prayer flick helper"
+	)
+	default boolean prayerFlickHelper()
 	{
-		for (WateringCan can : values())
-		{
-			wateringCans.put(can.getId(), can);
-		}
+		return true;
 	}
 
-	WateringCan(int id, int charges, Color color)
+	@ConfigItem(
+		position = 1,
+		keyName = "prayerIndicator",
+		name = "Boost Indicator",
+		description = "Enable infoboxes for prayers"
+	)
+	default boolean prayerIndicator()
 	{
-		this.id = id;
-		this.charges = charges;
-		this.color = color;
+		return false;
 	}
 
-	public static WateringCan getWateringCan(int itemId)
+	@ConfigItem(
+		position = 2,
+		keyName = "prayerIndicatorOverheads",
+		name = "Overhead Indicator",
+		description = "Also enable infoboxes for overheads"
+	)
+	default boolean prayerIndicatorOverheads()
 	{
-		return wateringCans.get(itemId);
+		return false;
 	}
 }

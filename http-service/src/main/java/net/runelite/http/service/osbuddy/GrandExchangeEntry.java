@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Devin French <https://github.com/devinfrench>
+ * Copyright (c) 2018, AeonLucid <https://github.com/AeonLucid>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,38 +22,17 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.client.plugins.jewellerycount;
+package net.runelite.http.service.osbuddy;
 
-import net.runelite.client.config.Config;
-import net.runelite.client.config.ConfigGroup;
-import net.runelite.client.config.ConfigItem;
+import java.time.Instant;
+import lombok.Data;
 
-@ConfigGroup(
-	keyName = "jewelleryCount",
-	name = "Jewellery Count",
-	description = "Configuration for the Jewellery count plugin"
-)
-public interface JewelleryCountConfig extends Config
+@Data
+class GrandExchangeEntry
 {
-	@ConfigItem(
-		keyName = "showJewelleryCount",
-		name = "Show Jewellery Count Configuration",
-		description = "Configures if jewellery count is shown",
-		position = 1
-	)
-	default boolean showJewelleryCount()
-	{
-		return true;
-	}
-
-	@ConfigItem(
-		keyName = "recoilNotification",
-		name = "Ring of Recoil Notification",
-		description = "Configures if the ring of recoil breaking notification is shown",
-		position = 2
-	)
-	default boolean recoilNotification()
-	{
-		return false;
-	}
+	private int item_id;
+	private int buy_average;
+	private int sell_average;
+	private int overall_average;
+	private Instant last_update;
 }
