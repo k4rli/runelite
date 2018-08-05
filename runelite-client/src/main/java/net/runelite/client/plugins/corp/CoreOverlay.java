@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Seth <http://github.com/sethtroll>
+ * Copyright (c) 2018, Adam <Adam@sigterm.info>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,46 +22,47 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.client.plugins.screenshot;
+package net.runelite.client.plugins.corp;
 
-import java.awt.event.KeyEvent;
-import java.util.Date;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics2D;
+import java.awt.Polygon;
 import javax.inject.Inject;
-import net.runelite.client.input.KeyListener;
-import static net.runelite.client.plugins.screenshot.ScreenshotPlugin.TIME_FORMAT;
+import net.runelite.api.Client;
+import net.runelite.api.NPC;
+import net.runelite.client.ui.overlay.Overlay;
+import net.runelite.client.ui.overlay.OverlayLayer;
+import net.runelite.client.ui.overlay.OverlayPosition;
+import net.runelite.client.ui.overlay.OverlayUtil;
 
-public class ScreenshotInput implements KeyListener
+class CoreOverlay extends Overlay
 {
-	private final ScreenshotConfig config;
-	private final ScreenshotPlugin plugin;
+	private final Client client;
+	private final CorpPlugin corpPlugin;
 
 	@Inject
-	ScreenshotInput(ScreenshotConfig config, ScreenshotPlugin plugin)
+	private CoreOverlay(Client client, CorpPlugin corpPlugin)
 	{
-		this.config = config;
-		this.plugin = plugin;
+		setPosition(OverlayPosition.DYNAMIC);
+		setLayer(OverlayLayer.ABOVE_SCENE);
+		this.client = client;
+		this.corpPlugin = corpPlugin;
 	}
 
 	@Override
-	public void keyPressed(KeyEvent event)
+	public Dimension render(Graphics2D graphics)
 	{
-	}
-
-	@Override
-	public void keyTyped(KeyEvent event)
-	{
-	}
-
-	@Override
-	public void keyReleased(KeyEvent event)
-	{
-		if (!config.isScreenshotEnabled())
-			return;
-
-		if (event.getKeyCode() == KeyEvent.VK_INSERT)
+		NPC core = corpPlugin.getCore();
+		if (core != null)
 		{
-			plugin.takeScreenshot(TIME_FORMAT.format(new Date()));
+			Polygon canvasTilePoly = core.getCanvasTilePoly();
+			if (canvasTilePoly != null)
+			{
+				OverlayUtil.renderPolygon(graphics, canvasTilePoly, Color.RED.brighter());
+			}
 		}
-	}
 
+		return null;
+	}
 }

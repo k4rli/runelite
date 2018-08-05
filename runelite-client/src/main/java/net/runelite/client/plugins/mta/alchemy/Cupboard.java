@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Adam <Adam@sigterm.info>
+ * Copyright (c) 2018, Adam <Adam@sigterm.info>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,23 +22,12 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.mapping;
+package net.runelite.client.plugins.mta.alchemy;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import net.runelite.api.GameObject;
 
-@Retention(RetentionPolicy.RUNTIME)
-@Target(
-	{
-		ElementType.METHOD, ElementType.CONSTRUCTOR
-	})
-@Documented
-public @interface Hook
+class Cupboard
 {
-	String value();
-
-	boolean end() default false;
+	GameObject gameObject;
+	AlchemyItem alchemyItem;
 }

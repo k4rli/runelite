@@ -26,8 +26,6 @@ package net.runelite.client.plugins.runecraft;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Provides;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -35,19 +33,31 @@ import java.util.regex.Pattern;
 import javax.inject.Inject;
 import lombok.AccessLevel;
 import lombok.Getter;
-import net.runelite.api.*;
+import net.runelite.api.ChatMessageType;
+import net.runelite.api.Client;
+import net.runelite.api.DecorativeObject;
+import net.runelite.api.GameState;
+import net.runelite.api.InventoryID;
+import net.runelite.api.Item;
+import net.runelite.api.ItemID;
+import net.runelite.api.NPC;
+import net.runelite.api.NpcID;
+import net.runelite.api.Query;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.ConfigChanged;
 import net.runelite.api.events.DecorativeObjectDespawned;
 import net.runelite.api.events.DecorativeObjectSpawned;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
+import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.api.queries.InventoryItemQuery;
 import net.runelite.api.queries.NPCQuery;
+import net.runelite.api.widgets.Widget;
+import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
-import net.runelite.client.ui.overlay.Overlay;
+import net.runelite.client.ui.overlay.OverlayManager;
 import net.runelite.client.util.QueryRunner;
 
 @PluginDescriptor(
@@ -56,6 +66,7 @@ import net.runelite.client.util.QueryRunner;
 public class RunecraftPlugin extends Plugin
 {
 	private static Pattern bindNeckString = Pattern.compile("You have ([0-9]+) charges left before your Binding necklace disintegrates.");
+	private static final int DESTROY_ITEM_WIDGET_ID = WidgetInfo.DESTROY_ITEM_YES.getId();
 
 	@Getter(AccessLevel.PACKAGE)
 	private final Set<DecorativeObject> abyssObjects = new HashSet<>();
@@ -65,6 +76,12 @@ public class RunecraftPlugin extends Plugin
 
 	@Getter(AccessLevel.PACKAGE)
 	private NPC darkMage;
+
+	@Inject
+	private Client client;
+
+	@Inject
+	private OverlayManager overlayManager;
 
 	@Inject
 	private RunecraftOverlay overlay;
@@ -88,20 +105,20 @@ public class RunecraftPlugin extends Plugin
 	}
 
 	@Override
-	public Collection<Overlay> getOverlays()
-	{
-		return Arrays.asList(overlay, bindNeckOverlay, abyssOverlay);
-	}
-
-	@Override
 	protected void startUp() throws Exception
 	{
+		overlayManager.add(overlay);
+		overlayManager.add(bindNeckOverlay);
+		overlayManager.add(abyssOverlay);
 		abyssOverlay.updateConfig();
 	}
 
 	@Override
 	protected void shutDown() throws Exception
 	{
+		overlayManager.remove(overlay);
+		overlayManager.remove(bindNeckOverlay);
+		overlayManager.remove(abyssOverlay);
 		abyssObjects.clear();
 		darkMage = null;
 		degradedPouchInInventory = false;
@@ -147,6 +164,23 @@ public class RunecraftPlugin extends Plugin
 			//set it to 17 because this message is triggered first before the above chat event
 			bindNeckOverlay.bindingCharges = 17;
 		}
+	}
+
+	@Subscribe
+	public void onMenuOptionClicked(MenuOptionClicked event)
+	{
+		if (event.getWidgetId() != DESTROY_ITEM_WIDGET_ID)
+		{
+			return;
+		}
+
+		Widget widgetDestroyItemName = client.getWidget(WidgetInfo.DESTROY_ITEM_NAME);
+		if (widgetDestroyItemName == null || !widgetDestroyItemName.getText().equals("Binding necklace"))
+		{
+			return;
+		}
+
+		bindNeckOverlay.bindingCharges = 16;
 	}
 
 	@Subscribe

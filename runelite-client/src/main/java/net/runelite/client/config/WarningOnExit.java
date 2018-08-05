@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2017, Adam <Adam@sigterm.info>
+ * Copyright (c) 2018, Matt <https://github.com/ms813>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,21 +22,24 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.mapping;
+package net.runelite.client.config;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-@Retention(RetentionPolicy.RUNTIME)
-@Target(
-	{
-		ElementType.METHOD, ElementType.CONSTRUCTOR, ElementType.FIELD
-	})
-public @interface ObfuscatedSignature
+@Getter
+@RequiredArgsConstructor
+public enum WarningOnExit
 {
-	String signature();
+	ALWAYS("Always"),
+	LOGGED_IN("Logged in"),
+	NEVER("Never");
 
-	String garbageValue() default ""; // valid garbage value for last parameter. can't be an Object because Java.
+	private final String type;
+
+	@Override
+	public String toString()
+	{
+		return type;
+	}
 }

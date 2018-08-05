@@ -33,15 +33,30 @@ import javax.annotation.Nullable;
 import net.runelite.api.annotations.VisibleForDevtools;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.hooks.Callbacks;
 import net.runelite.api.vars.AccountType;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
+import org.slf4j.Logger;
 
 /**
  * Represents the RuneScape client.
  */
 public interface Client extends GameEngine
 {
+	/**
+	 * The client invokes these callbacks to communicate to
+	 * @return
+	 */
+	Callbacks getCallbacks();
+
+	/**
+	 * Retrieve a global logger for the client.
+	 * This is most useful for mixins which can't have their own.
+	 * @return
+	 */
+	Logger getLogger();
+
 	/**
 	 * Gets a list of all valid players from the player cache.
 	 *
@@ -624,6 +639,14 @@ public interface Client extends GameEngine
 	 * @return the value
 	 */
 	String getVar(VarClientStr varClientStr);
+
+	/**
+	 * Sets the given variable
+	 *
+	 * @param varClientStr
+	 * @param value
+	 */
+	void setVar(VarClientStr varClientStr, String value);
 
 	/**
 	 * Sets the value of a given variable.

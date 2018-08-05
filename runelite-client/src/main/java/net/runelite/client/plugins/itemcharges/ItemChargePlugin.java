@@ -24,22 +24,38 @@
  */
 package net.runelite.client.plugins.itemcharges;
 
-import javax.inject.Inject;
-import net.runelite.api.ChatMessageType;
-import net.runelite.client.plugins.Plugin;
-import net.runelite.client.ui.overlay.Overlay;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Provides;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import javax.inject.Inject;
+import lombok.AccessLevel;
+import lombok.Getter;
+import net.runelite.api.ChatMessageType;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.client.Notifier;
 import net.runelite.client.config.ConfigManager;
+import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.ui.overlay.OverlayManager;
 
 @PluginDescriptor(
 	name = "Item Charges"
 )
 public class ItemChargePlugin extends Plugin
 {
+	private static final Pattern DODGY_CHECK_PATTERN = Pattern.compile(
+		"Your dodgy necklace has (\\d+) charges? left\\.");
+	private static final Pattern DODGY_PROTECT_PATTERN = Pattern.compile(
+		"Your dodgy necklace protects you\\..*It has (\\d+) charges? left\\.");
+	private static final Pattern DODGY_BREAK_PATTERN = Pattern.compile(
+		"Your dodgy necklace protects you\\..*It then crumbles to dust\\.");
+
+	private static final int MAX_DODGY_CHARGES = 10;
+
+	@Inject
+	private OverlayManager overlayManager;
+
 	@Inject
 	private ItemChargeOverlay overlay;
 
@@ -49,11 +65,8 @@ public class ItemChargePlugin extends Plugin
 	@Inject
 	private ItemChargeConfig config;
 
-	@Override
-	public Overlay getOverlay()
-	{
-		return overlay;
-	}
+	@Getter(AccessLevel.PACKAGE)
+	private int dodgyCharges;
 
 	@Provides
 	ItemChargeConfig getConfig(ConfigManager configManager)
@@ -61,15 +74,55 @@ public class ItemChargePlugin extends Plugin
 		return configManager.getConfig(ItemChargeConfig.class);
 	}
 
+	@Override
+	protected void startUp()
+	{
+		overlayManager.add(overlay);
+		dodgyCharges = config.dodgyNecklace();
+	}
+
+	@Override
+	protected void shutDown() throws Exception
+	{
+		overlayManager.remove(overlay);
+	}
+
 	@Subscribe
 	public void onChatMessage(ChatMessage event)
 	{
-		if (event.getType() == ChatMessageType.SERVER)
+		String message = event.getMessage();
+		Matcher dodgyCheckMatcher = DODGY_CHECK_PATTERN.matcher(message);
+		Matcher dodgyProtectMatcher = DODGY_PROTECT_PATTERN.matcher(message);
+		Matcher dodgyBreakMatcher = DODGY_BREAK_PATTERN.matcher(message);
+		if (event.getType() == ChatMessageType.SERVER || event.getType() == ChatMessageType.FILTERED)
 		{
-			if (config.recoilNotification() && event.getMessage().contains("<col=7f007f>Your Ring of Recoil has shattered.</col>"))
+			if (config.recoilNotification() && message.contains("<col=7f007f>Your Ring of Recoil has shattered.</col>"))
 			{
 				notifier.notify("Your Ring of Recoil has shattered");
 			}
+			else if (dodgyBreakMatcher.find())
+			{
+				if (config.dodgyNotification())
+				{
+					notifier.notify("Your dodgy necklace has crumbled to dust.");
+				}
+
+				setDodgyCharges(MAX_DODGY_CHARGES);
+			}
+			else if (dodgyCheckMatcher.find())
+			{
+				setDodgyCharges(Integer.parseInt(dodgyCheckMatcher.group(1)));
+			}
+			else if (dodgyProtectMatcher.find())
+			{
+				setDodgyCharges(Integer.parseInt(dodgyProtectMatcher.group(1)));
+			}
 		}
+	}
+
+	private void setDodgyCharges(int dodgyCharges)
+	{
+		this.dodgyCharges = dodgyCharges;
+		config.dodgyNecklace(dodgyCharges);
 	}
 }
