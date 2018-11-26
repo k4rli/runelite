@@ -4,11 +4,7 @@ import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
 
-@ConfigGroup(
-        keyName = "custommenuentryswapper",
-        name = "Supa's Custom Menu Swapper",
-        description = "Some custom options to swap entries"
-)
+@ConfigGroup("custommenuentryswapper")
 public interface CustomMenuSwapperConfig extends Config  {
     @ConfigItem(
             position = 1,
