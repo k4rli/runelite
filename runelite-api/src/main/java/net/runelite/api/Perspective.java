@@ -29,7 +29,6 @@ import java.awt.Graphics2D;
 import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.awt.geom.Area;
-import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -55,6 +54,7 @@ public class Perspective
 
 	public static final int LOCAL_COORD_BITS = 7;
 	public static final int LOCAL_TILE_SIZE = 1 << LOCAL_COORD_BITS; // 128 - size of a tile in local coordinates
+	public static final int LOCAL_HALF_TILE_SIZE = LOCAL_TILE_SIZE / 2;
 
 	public static final int SCENE_SIZE = Constants.SCENE_SIZE; // in tiles
 
@@ -80,6 +80,7 @@ public class Perspective
 	 * @return a {@link Point} on screen corresponding to the position in
 	 * 3D-space
 	 */
+	@Nullable
 	public static Point localToCanvas(@Nonnull Client client, @Nonnull LocalPoint point, int plane)
 	{
 		return localToCanvas(client, point, plane, 0);
@@ -96,6 +97,7 @@ public class Perspective
 	 * @return a {@link Point} on screen corresponding to the position in
 	 * 3D-space
 	 */
+	@Nullable
 	public static Point localToCanvas(@Nonnull Client client, @Nonnull LocalPoint point, int plane, int zOffset)
 	{
 		final int tileHeight = getTileHeight(client, point, plane);
@@ -113,7 +115,7 @@ public class Perspective
 	 * @return a {@link Point} on screen corresponding to the position in
 	 * 3D-space
 	 */
-	private static Point localToCanvas(@Nonnull Client client, int x, int y, int z)
+	public static Point localToCanvas(@Nonnull Client client, int x, int y, int z)
 	{
 		if (x >= 128 && y >= 128 && x <= 13056 && y <= 13056)
 		{
@@ -378,7 +380,7 @@ public class Perspective
 		@Nullable String text,
 		int zOffset)
 	{
-		if (text == null || "".equals(text))
+		if (text == null)
 		{
 			return null;
 		}
@@ -500,7 +502,7 @@ public class Perspective
 	 * @param point the coordinate of the tile
 	 * @return the clickable area of the model
 	 */
-	public static Area getClickbox(@Nonnull Client client, Model model, int orientation, @Nonnull LocalPoint point)
+	public static @Nullable Area getClickbox(@Nonnull Client client, Model model, int orientation, @Nonnull LocalPoint point)
 	{
 		if (model == null)
 		{
@@ -518,7 +520,7 @@ public class Perspective
 		Area clickBox = get2DGeometry(client, triangles, point);
 		Area visibleAABB = getAABB(client, vertices, point);
 
-		if (visibleAABB == null || clickBox == null)
+		if (visibleAABB == null)
 		{
 			return null;
 		}
@@ -540,14 +542,14 @@ public class Perspective
 			&& (point.getY() < 0 || point.getY() >= client.getViewportHeight());
 	}
 
-	private static Area get2DGeometry(
+	private static @Nonnull Area get2DGeometry(
 		@Nonnull Client client,
 		@Nonnull List<Triangle> triangles,
 		@Nonnull LocalPoint point
 	)
 	{
 		int radius = 5;
-		Path2D.Double geometry = new Path2D.Double();
+		Area geometry = new Area();
 
 		final int tileHeight = getTileHeight(client, point, client.getPlane());
 
@@ -605,10 +607,10 @@ public class Perspective
 				continue;
 			}
 
-			geometry.append(clickableRect, false);
+			geometry.add(new Area(clickableRect));
 		}
 
-		return new Area(geometry);
+		return geometry;
 	}
 
 	private static Area getAABB(

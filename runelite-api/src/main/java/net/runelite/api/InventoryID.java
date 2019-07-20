@@ -50,13 +50,22 @@ public enum InventoryID
 	 */
 	BARROWS_REWARD(141),
 	/**
+	 * Monkey madness puzzle box inventory.
+	 */
+	MONKEY_MADNESS_PUZZLE_BOX(221),
+	/**
 	 * Chambers of Xeric chest inventory.
 	 */
 	CHAMBERS_OF_XERIC_CHEST(581),
 	/**
 	 * Theater of Blood reward chest inventory (Raids 2)
 	 */
-	THEATRE_OF_BLOOD_CHEST(612);
+	THEATRE_OF_BLOOD_CHEST(612),
+
+	/**
+	 * Seed vault located inside the Farming Guild
+	 */
+	SEED_VAULT(626);
 
 	private final int id;
 

@@ -451,7 +451,7 @@ public interface ChatColorConfig extends Config
 	)
 	default Color transparentExamineHighlight()
 	{
-		return Color.decode("#0000FF");
+		return Color.GREEN;
 	}
 
 	@ConfigItem(
@@ -509,22 +509,4 @@ public interface ChatColorConfig extends Config
 		description = "Color of Friend Usernames in Public Chat (transparent)"
 	)
 	Color transparentPublicFriendUsernames();
-
-	//Plugin specific chat colours
-
-	@ConfigItem(
-		position = 88,
-		keyName = "opaqueTimestamp",
-		name = "Timestamps (opaque)",
-		description = "Colour of Timestamps from the Timestamps plugin (opaque)"
-	)
-	Color opaqueTimestamp();
-
-	@ConfigItem(
-		position = 89,
-		keyName = "transparentTimestamp",
-		name = "Timestamps (transparent)",
-		description = "Colour of Timestamps from the Timestamps plugin (transparent)"
-	)
-	Color transparentTimestamp();
 }

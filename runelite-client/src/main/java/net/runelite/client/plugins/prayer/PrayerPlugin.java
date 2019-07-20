@@ -32,6 +32,7 @@ import javax.inject.Inject;
 import lombok.AccessLevel;
 import lombok.Getter;
 import net.runelite.api.Client;
+import net.runelite.api.Constants;
 import net.runelite.api.InventoryID;
 import net.runelite.api.Item;
 import net.runelite.api.ItemContainer;
@@ -134,8 +135,8 @@ public class PrayerPlugin extends Plugin
 		if (container == inventory || container == equipment)
 		{
 			doseOverlay.setHasHolyWrench(false);
-			doseOverlay.setHasPrayerPotion(false);
-			doseOverlay.setHasRestorePotion(false);
+			doseOverlay.setHasPrayerRestore(false);
+			doseOverlay.setBonusPrayer(0);
 
 			if (inventory != null)
 			{
@@ -212,6 +213,10 @@ public class PrayerPlugin extends Plugin
 
 		int total = 0;
 
+		boolean hasPrayerPotion = false;
+		boolean hasSuperRestore = false;
+		boolean hasSanfew = false;
+
 		for (Item item : items)
 		{
 			if (item == null)
@@ -226,19 +231,35 @@ public class PrayerPlugin extends Plugin
 				switch (type)
 				{
 					case PRAYERPOT:
-						doseOverlay.setHasPrayerPotion(true);
+						hasPrayerPotion = true;
+						break;
+					case RESTOREPOT:
+						hasSuperRestore = true;
+						break;
+					case SANFEWPOT:
+						hasSanfew = true;
 						break;
 					case HOLYWRENCH:
 						doseOverlay.setHasHolyWrench(true);
-						break;
-					case RESTOREPOT:
-						doseOverlay.setHasRestorePotion(true);
 						break;
 				}
 			}
 
 			int bonus = PrayerItems.getItemPrayerBonus(item.getId());
 			total += bonus;
+		}
+
+		if (hasSanfew || hasSuperRestore || hasPrayerPotion)
+		{
+			doseOverlay.setHasPrayerRestore(true);
+			if (hasSanfew)
+			{
+				doseOverlay.setBonusPrayer(2);
+			}
+			else if (hasSuperRestore)
+			{
+				doseOverlay.setBonusPrayer(1);
+			}
 		}
 
 		return total;
@@ -248,7 +269,7 @@ public class PrayerPlugin extends Plugin
 	{
 		long timeSinceLastTick = Duration.between(startOfLastTick, Instant.now()).toMillis();
 
-		float tickProgress = (timeSinceLastTick % 600) / 600f;
+		float tickProgress = (timeSinceLastTick % Constants.GAME_TICK_LENGTH) / (float) Constants.GAME_TICK_LENGTH;
 		return tickProgress * Math.PI;
 	}
 

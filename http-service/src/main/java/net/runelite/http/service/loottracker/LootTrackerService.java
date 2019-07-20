@@ -49,7 +49,7 @@ public class LootTrackerService
 		+ "  `type` enum('NPC', 'PLAYER', 'EVENT', 'UNKNOWN') NOT NULL,\n"
 		+ "  `eventId` VARCHAR(255) NOT NULL,\n"
 		+ "  PRIMARY KEY (id),\n"
-		+ "  FOREIGN KEY (accountId) REFERENCES sessions(user) ON DELETE CASCADE,\n"
+		+ "  FOREIGN KEY (accountId) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,\n"
 		+ "  INDEX idx_acc (accountId, time),"
 		+ "  INDEX idx_time (time)"
 		+ ") ENGINE=InnoDB";
@@ -66,7 +66,10 @@ public class LootTrackerService
 	private static final String INSERT_KILL_QUERY = "INSERT INTO kills (accountId, type, eventId) VALUES (:accountId, :type, :eventId)";
 	private static final String INSERT_DROP_QUERY = "INSERT INTO drops (killId, itemId, itemQuantity) VALUES (LAST_INSERT_ID(), :itemId, :itemQuantity)";
 
-	private static final String SELECT_LOOT_QUERY = "SELECT killId,time,type,eventId,itemId,itemQuantity FROM kills JOIN drops ON drops.killId = kills.id WHERE accountId = :accountId ORDER BY TIME DESC LIMIT :limit";
+	private static final String SELECT_LOOT_QUERY = "SELECT killId,time,type,eventId,itemId,itemQuantity FROM kills JOIN drops ON drops.killId = kills.id WHERE accountId = :accountId ORDER BY TIME DESC LIMIT :limit OFFSET :offset";
+
+	private static final String DELETE_LOOT_ACCOUNT = "DELETE FROM kills WHERE accountId = :accountId";
+	private static final String DELETE_LOOT_ACCOUNT_EVENTID = "DELETE FROM kills WHERE accountId = :accountId AND eventId = :eventId";
 
 	private final Sql2o sql2o;
 
@@ -116,7 +119,7 @@ public class LootTrackerService
 		}
 	}
 
-	public Collection<LootRecord> get(int accountId, int limit)
+	public Collection<LootRecord> get(int accountId, int limit, int offset)
 	{
 		List<LootResult> lootResults;
 
@@ -125,26 +128,27 @@ public class LootTrackerService
 			lootResults = con.createQuery(SELECT_LOOT_QUERY)
 				.addParameter("accountId", accountId)
 				.addParameter("limit", limit)
+				.addParameter("offset", offset)
 				.executeAndFetch(LootResult.class);
 		}
 
-		int killId = -1;
+		LootResult current = null;
 		List<LootRecord> lootRecords = new ArrayList<>();
 		List<GameItem> gameItems = new ArrayList<>();
 
 		for (LootResult lootResult : lootResults)
 		{
-			if (killId != lootResult.getKillId())
+			if (current == null || current.getKillId() != lootResult.getKillId())
 			{
-				killId = lootResult.getKillId();
-
 				if (!gameItems.isEmpty())
 				{
-					LootRecord lootRecord = new LootRecord(lootResult.getEventId(), lootResult.getType(), gameItems);
+					LootRecord lootRecord = new LootRecord(current.getEventId(), current.getType(), gameItems, current.getTime());
 					lootRecords.add(lootRecord);
+
+					gameItems = new ArrayList<>();
 				}
 
-				gameItems = new ArrayList<>();
+				current = lootResult;
 			}
 
 			GameItem gameItem = new GameItem(lootResult.getItemId(), lootResult.getItemQuantity());
@@ -153,12 +157,31 @@ public class LootTrackerService
 
 		if (!gameItems.isEmpty())
 		{
-			LootResult lootResult = lootResults.get(lootResults.size() - 1);
-			LootRecord lootRecord = new LootRecord(lootResult.getEventId(), lootResult.getType(), gameItems);
+			LootRecord lootRecord = new LootRecord(current.getEventId(), current.getType(), gameItems, current.getTime());
 			lootRecords.add(lootRecord);
 		}
 
 		return lootRecords;
+	}
+
+	public void delete(int accountId, String eventId)
+	{
+		try (Connection con = sql2o.open())
+		{
+			if (eventId == null)
+			{
+				con.createQuery(DELETE_LOOT_ACCOUNT)
+					.addParameter("accountId", accountId)
+					.executeUpdate();
+			}
+			else
+			{
+				con.createQuery(DELETE_LOOT_ACCOUNT_EVENTID)
+					.addParameter("accountId", accountId)
+					.addParameter("eventId", eventId)
+					.executeUpdate();
+			}
+		}
 	}
 
 	@Scheduled(fixedDelay = 15 * 60 * 1000)
@@ -166,7 +189,7 @@ public class LootTrackerService
 	{
 		try (Connection con = sql2o.open())
 		{
-			con.createQuery("delete from kills where time + interval 30 day < current_timestamp()")
+			con.createQuery("delete from kills where time < current_timestamp() - interval 30 day")
 				.executeUpdate();
 		}
 	}

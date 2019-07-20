@@ -24,7 +24,6 @@
  */
 package net.runelite.client.plugins.combatlevel;
 
-import com.google.common.annotations.VisibleForTesting;
 import net.runelite.api.Client;
 import net.runelite.api.Experience;
 import net.runelite.api.Skill;
@@ -90,96 +89,46 @@ class CombatLevelOverlay extends Overlay
 		int defenceLevel = client.getRealSkillLevel(Skill.DEFENCE);
 		int hitpointsLevel = client.getRealSkillLevel(Skill.HITPOINTS);
 		int magicLevel = client.getRealSkillLevel(Skill.MAGIC);
-		int rangedLevel = client.getRealSkillLevel(Skill.RANGED);
+		int rangeLevel = client.getRealSkillLevel(Skill.RANGED);
 		int prayerLevel = client.getRealSkillLevel(Skill.PRAYER);
 
-		// calculate initial required numbers
-		double base = 0.25 * (defenceLevel + hitpointsLevel + Math.floor(prayerLevel / 2));
-		double melee = 0.325 * (attackLevel + strengthLevel);
-		double range = 0.325 * Math.floor(rangedLevel * 1.5);
-		double mage = 0.325 * Math.floor(magicLevel * 1.5);
-		double max = Math.max(melee, Math.max(range, mage));
-
 		// find the needed levels until level up
-		int next = client.getLocalPlayer().getCombatLevel() + 1;
-		int meleeNeed = calcLevels(base + melee, next, 0.325);
-		int hpdefNeed = calcLevels(base + max, next, 0.25);
-		int prayNeed = calcLevels(base + max, next, 0.125);
-		int rangeNeed = calcLevelsRM(rangedLevel, next, base);
-		int magicNeed = calcLevelsRM(magicLevel, next, base);
-
-		// prayer is a special case, increasing combat every even level. need to correct its value
-		prayNeed = correctPrayer(prayerLevel, prayNeed);
+		int meleeNeed = Experience.getNextCombatLevelMelee(attackLevel, strengthLevel, defenceLevel, hitpointsLevel,
+			magicLevel, rangeLevel, prayerLevel);
+		int hpDefNeed = Experience.getNextCombatLevelHpDef(attackLevel, strengthLevel, defenceLevel, hitpointsLevel,
+			magicLevel, rangeLevel, prayerLevel);
+		int rangeNeed = Experience.getNextCombatLevelRange(attackLevel, strengthLevel, defenceLevel, hitpointsLevel,
+			magicLevel, rangeLevel, prayerLevel);
+		int magicNeed = Experience.getNextCombatLevelMagic(attackLevel, strengthLevel, defenceLevel, hitpointsLevel,
+			magicLevel, rangeLevel, prayerLevel);
+		int prayerNeed = Experience.getNextCombatLevelPrayer(attackLevel, strengthLevel, defenceLevel, hitpointsLevel,
+			magicLevel, rangeLevel, prayerLevel);
 
 		// create tooltip string
 		StringBuilder sb = new StringBuilder();
 		sb.append(ColorUtil.wrapWithColorTag("Next combat level:</br>", COMBAT_LEVEL_COLOUR));
 
-		if ((attackLevel + strengthLevel + meleeNeed) <= 198)
+		if ((attackLevel + strengthLevel + meleeNeed) <= Experience.MAX_REAL_LEVEL * 2)
 		{
 			sb.append(meleeNeed).append(" Attack/Strength</br>");
 		}
-		if ((hitpointsLevel + defenceLevel + hpdefNeed) <= 198)
+		if ((hitpointsLevel + defenceLevel + hpDefNeed) <= Experience.MAX_REAL_LEVEL * 2)
 		{
-			sb.append(hpdefNeed).append(" Defence/Hitpoints</br>");
+			sb.append(hpDefNeed).append(" Defence/Hitpoints</br>");
 		}
-		if ((rangedLevel + rangeNeed) <= 99)
+		if ((rangeLevel + rangeNeed) <= Experience.MAX_REAL_LEVEL)
 		{
 			sb.append(rangeNeed).append(" Ranged</br>");
 		}
-		if ((magicLevel + magicNeed) <= 99)
+		if ((magicLevel + magicNeed) <= Experience.MAX_REAL_LEVEL)
 		{
 			sb.append(magicNeed).append(" Magic</br>");
 		}
-		if ((prayerLevel + prayNeed) <= 99)
+		if ((prayerLevel + prayerNeed) <= Experience.MAX_REAL_LEVEL)
 		{
-			sb.append(prayNeed).append(" Prayer");
+			sb.append(prayerNeed).append(" Prayer");
 		}
 		return sb.toString();
 	}
 
-	/***
-	 * Calculate skill levels required for increasing combat level, meant
-	 * for all combat skills besides ranged and magic.
-	 * @param start	initial value
-	 * @param end	ending value (combat level + 1)
-	 * @param multiple	how much adding one skill level will change combat
-	 * @return	levels required for a specific skill to level up combat
-	 */
-	@VisibleForTesting
-	static int calcLevels(double start, int end, double multiple)
-	{
-		return (int) Math.ceil((end - start) / multiple);
-	}
-
-	/***
-	 * Calculate skill levels required for increasing combat level, meant
-	 * ONLY for Ranged and Magic skills.
-	 * @param start	either the current ranged or magic level
-	 * @param end	ending value (combat level + 1)
-	 * @param dhp	defence, hitpoints, and prayer; this is the initial calculated "base" value
-	 * @return	levels required for a specific skill to level up combat
-	 */
-	@VisibleForTesting
-	static int calcLevelsRM(double start, int end, double dhp)
-	{
-		start = Math.floor(start * 1.5) * 0.325;
-		return (int) Math.ceil((end - dhp - start) / 0.4875);
-	}
-
-	/***
-	 * Corrects how many levels you need to level up combat through prayer.
-	 * @param level	current prayer level
-	 * @param need	needed prayer level calculated by calcLevels(...)
-	 * @return	a corrected number to increase combat through prayer only
-	 */
-	@VisibleForTesting
-	static int correctPrayer(int level, int need)
-	{
-		if ((level + need) % 2 == 1)
-		{
-			need++;
-		}
-		return need;
-	}
 }

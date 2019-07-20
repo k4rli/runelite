@@ -60,6 +60,8 @@ public interface Client extends GameEngine
 	 */
 	Logger getLogger();
 
+	String getBuildID();
+
 	/**
 	 * Gets a list of all valid players from the player cache.
 	 *
@@ -150,11 +152,25 @@ public interface Client extends GameEngine
 	void setPassword(String password);
 
 	/**
+	 * Sets the 6 digit pin used for authenticator on login screen.
+	 *
+	 * @param otp one time password
+	 */
+	void setOtp(String otp);
+
+	/**
 	 * Gets currently selected login field. 0 is username, and 1 is password.
 	 *
 	 * @return currently selected login field
 	 */
 	int getCurrentLoginField();
+
+	/**
+	 * Gets index of current login state. 2 is username/password form, 4 is authenticator form
+	 *
+	 * @return current login state index
+	 */
+	int getLoginIndex();
 
 	/**
 	 * Gets the account type of the logged in player.
@@ -344,6 +360,7 @@ public interface Client extends GameEngine
 	 * @param scale the scale of the sprite
 	 * @return the created sprite
 	 */
+	@Nullable
 	SpritePixels createItemSprite(int itemId, int quantity, int border, int shadowColor, int stackable, boolean noted, int scale);
 
 	/**
@@ -354,6 +371,7 @@ public interface Client extends GameEngine
 	 * @param fileId the sprites file ID
 	 * @return the sprite image of the file
 	 */
+	@Nullable
 	SpritePixels[] getSprites(IndexDataBase source, int archiveId, int fileId);
 
 	/**
@@ -392,23 +410,6 @@ public interface Client extends GameEngine
 	 * @return the pressed mouse button
 	 */
 	int getMouseCurrentButton();
-
-	/**
-	 * Schedules checking of current region tile for next frame, so ${@link Client#getSelectedSceneTile()} ()} will
-	 * return actual value.
-	 *
-	 * @param checkClick when true next frame selected region tile will be updated
-	 */
-	void setCheckClick(boolean checkClick);
-
-	/**
-	 * Sets current mouse hover position. This value is automatically updated only when right-clicking in game.
-	 * Setting this value together with ${@link Client#setCheckClick(boolean)} will update ${@link Client#getSelectedSceneTile()} ()}
-	 * for next frame.
-	 *
-	 * @param position current mouse hover position
-	 */
-	void setMouseCanvasHoverPosition(Point position);
 
 	/**
 	 * Gets the currently selected tile (ie. last right clicked tile).
@@ -634,20 +635,10 @@ public interface Client extends GameEngine
 	int[] getVarps();
 
 	/**
-	 * Gets an array of all integer client variables.
-	 *
-	 * @return local variables
+	 * Gets an array of all client variables.
 	 */
 	@VisibleForDevtools
-	int[] getIntVarcs();
-
-	/**
-	 * Gets an array of all string client variables.
-	 *
-	 * @return local variables
-	 */
-	@VisibleForDevtools
-	String[] getStrVarcs();
+	Map<Integer, Object> getVarcMap();
 
 	/**
 	 * Gets the value corresponding to the passed player variable.
@@ -783,6 +774,13 @@ public interface Client extends GameEngine
 	int getSkillExperience(Skill skill);
 
 	/**
+	 * Get the total experience of the player
+	 *
+	 * @return
+	 */
+	long getOverallExperience();
+
+	/**
 	 * Gets the game drawing mode.
 	 *
 	 * @return the game drawing mode
@@ -848,7 +846,7 @@ public interface Client extends GameEngine
 	 *
 	 * @return the world areas
 	 */
-	Area[] getMapAreas();
+	MapElementConfig[] getMapElementConfigs();
 
 	/**
 	 * Gets a sprite of the map scene
@@ -957,6 +955,28 @@ public interface Client extends GameEngine
 	void playSoundEffect(int id, int x, int y, int range);
 
 	/**
+	 * Play a sound effect from some point in the world.
+	 *
+	 * @param id the ID of the sound to play. Any int is allowed, but see
+	 * {@link SoundEffectID} for some common ones
+	 * @param x the ground coordinate on the x axis
+	 * @param y the ground coordinate on the y axis
+	 * @param range the number of tiles away that the sound can be heard
+	 * from
+	 * @param delay the amount of frames before the sound starts playing
+	 */
+	void playSoundEffect(int id, int x, int y, int range, int delay);
+
+	/**
+	 * Plays a sound effect, even if the player's sound effect volume is muted.
+	 *
+	 * @param id     the ID of the sound effect - {@link SoundEffectID}
+	 * @param volume the volume to play the sound effect at, see {@link SoundEffectVolume} for values used
+	 *               in the settings interface. if the sound effect volume is not muted, uses the set volume
+	 */
+	void playSoundEffect(int id, int volume);
+
+	/**
 	 * Gets the clients graphic buffer provider.
 	 *
 	 * @return the buffer provider
@@ -1054,6 +1074,20 @@ public interface Client extends GameEngine
 	 * @return the clan chat members, null if not in a clan
 	 */
 	ClanMember[] getClanMembers();
+
+	/**
+	 * Gets the clan owner of the currently joined clan chat
+	 *
+	 * @return
+	 */
+	String getClanOwner();
+
+	/**
+	 * Gets the clan chat name of the currently joined clan chat
+	 *
+	 * @return
+	 */
+	String getClanChatName();
 
 	/**
 	 * Gets an array of players in the friends list.
@@ -1334,6 +1368,13 @@ public interface Client extends GameEngine
 	boolean isInInstancedRegion();
 
 	/**
+	 * Get the number of client ticks an item has been pressed
+	 *
+	 * @return the number of client ticks an item has been pressed
+	 */
+	int getItemPressedDuration();
+
+	/**
 	 * Sets whether the client is hiding entities.
 	 * <p>
 	 * This method does not itself hide any entities. It behaves as a master
@@ -1425,6 +1466,7 @@ public interface Client extends GameEngine
 	 *
 	 * @return the collision data
 	 */
+	@Nullable
 	CollisionData[] getCollisionMaps();
 
 	@VisibleForDevtools
@@ -1514,6 +1556,16 @@ public interface Client extends GameEngine
 	void setOculusOrbNormalSpeed(int speed);
 
 	/**
+	 * Gets local X coord where the camera is pointing when the Oculus orb is active
+	 */
+	int getOculusOrbFocalPointX();
+
+	/**
+	 * Gets local Y coord where the camera is pointing when the Oculus orb is active
+	 */
+	int getOculusOrbFocalPointY();
+
+	/**
 	 * Opens in-game world hopper interface
 	 */
 	void openWorldHopper();
@@ -1523,6 +1575,16 @@ public interface Client extends GameEngine
 	 * @param world target world to hop to
 	 */
 	void hopToWorld(World world);
+
+	/**
+	 * Sets the RGB color of the skybox
+	 */
+	void setSkyboxColor(int skyboxColor);
+
+	/**
+	 * Gets the RGB color of the skybox
+	 */
+	int getSkyboxColor();
 
 	boolean isGpu();
 
@@ -1548,4 +1610,38 @@ public interface Client extends GameEngine
 	int getRasterizer3D_clipMidY2();
 
 	void checkClickbox(Model model, int orientation, int pitchSin, int pitchCos, int yawSin, int yawCos, int x, int y, int z, long hash);
+
+	/**
+	 * Get the if1 widget whose item is being dragged
+	 *
+	 * @return
+	 */
+	Widget getIf1DraggedWidget();
+
+	/**
+	 * Get the item index of the item being dragged on an if1 widget
+	 * @return
+	 */
+	int getIf1DraggedItemIndex();
+
+	/**
+	 * Sets if a widget is in target mode
+	 */
+	void setSpellSelected(boolean selected);
+
+	/**
+	 * Returns client item composition cache
+	 */
+	NodeCache getItemCompositionCache();
+
+	/**
+	 * Returns the array of cross sprites that appear and animate when left-clicking
+	 */
+	SpritePixels[] getCrossSprites();
+
+	EnumComposition getEnum(int id);
+
+	void draw2010Menu();
+
+	void resetHealthBarCaches();
 }

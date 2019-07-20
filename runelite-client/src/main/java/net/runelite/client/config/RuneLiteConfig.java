@@ -26,6 +26,7 @@ package net.runelite.client.config;
 
 import java.awt.Dimension;
 import net.runelite.api.Constants;
+import net.runelite.client.ui.ContainableFrame;
 
 @ConfigGroup("runelite")
 public interface RuneLiteConfig extends Config
@@ -64,14 +65,14 @@ public interface RuneLiteConfig extends Config
 	}
 
 	@ConfigItem(
-		keyName = "containInScreen",
+		keyName = "containInScreen2",
 		name = "Contain in screen",
-		description = "Makes the client stay contained in the screen when attempted to move out of it.<br>Note: Only works if custom chrome is enabled.",
+		description = "Makes the client stay contained in the screen when attempted to move out of it.<br>Note: 'Always' only works if custom chrome is enabled.",
 		position = 13
 	)
-	default boolean containInScreen()
+	default ContainableFrame.Mode containInScreen()
 	{
-		return false;
+		return ContainableFrame.Mode.RESIZING;
 	}
 
 	@ConfigItem(
@@ -175,14 +176,14 @@ public interface RuneLiteConfig extends Config
 	}
 
 	@ConfigItem(
-		keyName = "notificationFlash",
-		name = "Enable flash notification",
+		keyName = "flashNotification",
+		name = "Flash notification",
 		description = "Flashes the game frame as a notification",
 		position = 24
 	)
-	default boolean enableFlashNotification()
+	default FlashNotification flashNotification()
 	{
-		return false;
+		return FlashNotification.DISABLED;
 	}
 
 	@ConfigItem(
@@ -230,10 +231,21 @@ public interface RuneLiteConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "menuEntryShift",
+		name = "Require Shift for overlay menu",
+		description = "Overlay right-click menu will require shift to be added",
+		position = 33
+	)
+	default boolean menuEntryShift()
+	{
+		return true;
+	}
+
+	@ConfigItem(
 		keyName = "infoBoxVertical",
 		name = "Display infoboxes vertically",
 		description = "Toggles the infoboxes to display vertically",
-		position = 33
+		position = 40
 	)
 	default boolean infoBoxVertical()
 	{
@@ -244,7 +256,7 @@ public interface RuneLiteConfig extends Config
 		keyName = "infoBoxWrap",
 		name = "Infobox wrap count",
 		description = "Configures the amount of infoboxes shown before wrapping",
-		position = 34
+		position = 41
 	)
 	default int infoBoxWrap()
 	{
@@ -255,7 +267,7 @@ public interface RuneLiteConfig extends Config
 		keyName = "infoBoxSize",
 		name = "Infobox size (px)",
 		description = "Configures the size of each infobox in pixels",
-		position = 35
+		position = 42
 	)
 	default int infoBoxSize()
 	{

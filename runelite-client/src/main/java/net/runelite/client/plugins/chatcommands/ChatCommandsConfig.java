@@ -77,6 +77,50 @@ public interface ChatCommandsConfig extends Config
 
 	@ConfigItem(
 		position = 4,
+		keyName = "qp",
+		name = "QP Command",
+		description = "Configures whether the quest point command is enabled<br> !qp"
+	)
+	default boolean qp()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		position = 5,
+		keyName = "pb",
+		name = "PB Command",
+		description = "Configures whether the personal best command is enabled<br> !pb"
+	)
+	default boolean pb()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		position = 6,
+		keyName = "gc",
+		name = "GC Command",
+		description = "Configures whether the Barbarian Assault High gamble count command is enabled<br> !gc"
+	)
+	default boolean gc()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		position = 7,
+		keyName = "duels",
+		name = "Duels Command",
+		description = "Configures whether the duel arena command is enabled<br> !duels"
+	)
+	default boolean duels()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		position = 8,
 		keyName = "clearShortcuts",
 		name = "Clear shortcuts",
 		description = "Enable shortcuts (ctrl+w and backspace) for clearing the chatbox"

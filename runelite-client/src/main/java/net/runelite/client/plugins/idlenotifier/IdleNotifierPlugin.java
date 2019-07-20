@@ -35,6 +35,7 @@ import net.runelite.api.Actor;
 import net.runelite.api.AnimationID;
 import static net.runelite.api.AnimationID.*;
 import net.runelite.api.Client;
+import net.runelite.api.Constants;
 import net.runelite.api.GameState;
 import net.runelite.api.GraphicID;
 import net.runelite.api.Hitsplat;
@@ -47,6 +48,7 @@ import net.runelite.api.Varbits;
 import net.runelite.api.events.AnimationChanged;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
+import net.runelite.api.events.GraphicChanged;
 import net.runelite.api.events.HitsplatApplied;
 import net.runelite.api.events.InteractingChanged;
 import net.runelite.client.Notifier;
@@ -63,9 +65,10 @@ import net.runelite.client.plugins.PluginDescriptor;
 public class IdleNotifierPlugin extends Plugin
 {
 	// This must be more than 500 client ticks (10 seconds) before you get AFK kicked
-	private static final int LOGOUT_WARNING_CLIENT_TICKS = ((4 * 60) + 40) * 50;// 4 minutes and 40 seconds
+	private static final int LOGOUT_WARNING_MILLIS = (4 * 60 + 40) * 1000; // 4 minutes and 40 seconds
 	private static final int COMBAT_WARNING_MILLIS = 19 * 60 * 1000; // 19 minutes
-	private static final int COMBAT_WARNING_CLIENT_TICKS = COMBAT_WARNING_MILLIS / 20;
+	private static final int LOGOUT_WARNING_CLIENT_TICKS = LOGOUT_WARNING_MILLIS / Constants.CLIENT_TICK_LENGTH;
+	private static final int COMBAT_WARNING_CLIENT_TICKS = COMBAT_WARNING_MILLIS / Constants.CLIENT_TICK_LENGTH;
 
 	private static final int HIGHEST_MONSTER_ATTACK_SPEED = 8; // Except Scarab Mage, but they are with other monsters
 	private static final Duration SIX_HOUR_LOGOUT_WARNING_AFTER_DURATION = Duration.ofMinutes(340);
@@ -135,7 +138,7 @@ public class IdleNotifierPlugin extends Plugin
 			case COOKING_FIRE:
 			case COOKING_RANGE:
 			case COOKING_WINE:
-			/* Crafting(Gem Cutting, Glassblowing, Spinning, Battlestaves) */
+			/* Crafting(Gem Cutting, Glassblowing, Spinning, Battlestaves, Pottery) */
 			case GEM_CUTTING_OPAL:
 			case GEM_CUTTING_JADE:
 			case GEM_CUTTING_REDTOPAZ:
@@ -143,10 +146,13 @@ public class IdleNotifierPlugin extends Plugin
 			case GEM_CUTTING_EMERALD:
 			case GEM_CUTTING_RUBY:
 			case GEM_CUTTING_DIAMOND:
+			case GEM_CUTTING_AMETHYST:
 			case CRAFTING_GLASSBLOWING:
 			case CRAFTING_SPINNING:
 			case CRAFTING_BATTLESTAVES:
 			case CRAFTING_LEATHER:
+			case CRAFTING_POTTERS_WHEEL:
+			case CRAFTING_POTTERY_OVEN:
 			/* Fletching(Cutting, Stringing) */
 			case FLETCHING_BOW_CUTTING:
 			case FLETCHING_STRING_NORMAL_SHORTBOW:
@@ -195,17 +201,30 @@ public class IdleNotifierPlugin extends Plugin
 			case MINING_MOTHERLODE_INFERNAL:
 			case MINING_MOTHERLODE_3A:
 			/* Herblore */
+			case HERBLORE_PESTLE_AND_MORTAR:
 			case HERBLORE_POTIONMAKING:
 			case HERBLORE_MAKE_TAR:
 			/* Magic */
 			case MAGIC_CHARGING_ORBS:
+			case MAGIC_LUNAR_PLANK_MAKE:
 			case MAGIC_LUNAR_STRING_JEWELRY:
 			case MAGIC_MAKE_TABLET:
+			case MAGIC_ENCHANTING_JEWELRY:
+			case MAGIC_ENCHANTING_AMULET_1:
+			case MAGIC_ENCHANTING_AMULET_2:
+			case MAGIC_ENCHANTING_AMULET_3:
 			/* Prayer */
 			case USING_GILDED_ALTAR:
 			/* Farming */
 			case FARMING_MIX_ULTRACOMPOST:
+			case FARMING_HARVEST_BUSH:
+			case FARMING_HARVEST_HERB:
+			case FARMING_HARVEST_FRUIT_TREE:
+			case FARMING_HARVEST_FLOWER:
+			case FARMING_HARVEST_ALLOTMENT:
 			/* Misc */
+			case PISCARILIUS_CRANE_REPAIR:
+			case HOME_MAKE_TABLET:
 			case SAND_COLLECTION:
 				resetTimers();
 				lastAnimation = animation;
@@ -327,6 +346,22 @@ public class IdleNotifierPlugin extends Plugin
 	}
 
 	@Subscribe
+	public void onGraphicChanged(GraphicChanged event)
+	{
+		Actor actor = event.getActor();
+
+		if (actor != client.getLocalPlayer())
+		{
+			return;
+		}
+
+		if (actor.getGraphic() == GraphicID.SPLASH)
+		{
+			lastCombatCountdown = HIGHEST_MONSTER_ATTACK_SPEED;
+		}
+	}
+
+	@Subscribe
 	public void onGameTick(GameTick event)
 	{
 		final Player local = client.getLocalPlayer();
@@ -387,7 +422,7 @@ public class IdleNotifierPlugin extends Plugin
 
 		if (checkFullSpecEnergy())
 		{
-			notifier.notify("[" + local.getName() + "] has restored spec energy!");;
+			notifier.notify("[" + local.getName() + "] has restored spec energy!");
 		}
 	}
 
