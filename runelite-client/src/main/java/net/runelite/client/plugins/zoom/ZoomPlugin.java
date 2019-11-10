@@ -31,7 +31,7 @@ import com.google.inject.Provides;
 import java.awt.event.KeyEvent;
 import net.runelite.api.Client;
 import net.runelite.api.ScriptID;
-import net.runelite.api.events.ConfigChanged;
+import net.runelite.client.events.ConfigChanged;
 import net.runelite.api.events.FocusChanged;
 import net.runelite.api.events.ScriptCallbackEvent;
 import net.runelite.client.callback.ClientThread;
@@ -50,12 +50,6 @@ import net.runelite.client.plugins.PluginDescriptor;
 )
 public class ZoomPlugin extends Plugin implements KeyListener
 {
-	/**
-	 * The largest (most zoomed in) value that can be used without the client crashing.
-	 *
-	 * Larger values trigger an overflow in the engine's fov to scale code.
-	 */
-	private static final int INNER_ZOOM_LIMIT = 1004;
 	private static final int DEFAULT_ZOOM_INCREMENT = 25;
 
 	private boolean controlDown;
@@ -98,7 +92,7 @@ public class ZoomPlugin extends Plugin implements KeyListener
 
 		if ("innerZoomLimit".equals(event.getEventName()) && zoomConfig.innerLimit())
 		{
-			intStack[intStackSize - 1] = INNER_ZOOM_LIMIT;
+			intStack[intStackSize - 1] = ZoomConfig.INNER_ZOOM_LIMIT;
 			return;
 		}
 
@@ -195,7 +189,7 @@ public class ZoomPlugin extends Plugin implements KeyListener
 
 			if (zoomConfig.controlFunction() == ControlFunction.CONTROL_TO_RESET)
 			{
-				final int zoomValue = Ints.constrainToRange(zoomConfig.ctrlZoomValue(), zoomConfig.OUTER_LIMIT_MIN, INNER_ZOOM_LIMIT);
+				final int zoomValue = Ints.constrainToRange(zoomConfig.ctrlZoomValue(), ZoomConfig.OUTER_LIMIT_MIN, ZoomConfig.INNER_ZOOM_LIMIT);
 				clientThread.invokeLater(() -> client.runScript(ScriptID.CAMERA_DO_ZOOM, zoomValue, zoomValue));
 			}
 		}

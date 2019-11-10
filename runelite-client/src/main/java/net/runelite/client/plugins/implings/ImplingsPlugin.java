@@ -37,6 +37,7 @@ import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.NpcChanged;
 import net.runelite.api.events.NpcDespawned;
 import net.runelite.api.events.NpcSpawned;
+import net.runelite.client.Notifier;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
@@ -64,6 +65,9 @@ public class ImplingsPlugin extends Plugin
 
 	@Inject
 	private ImplingsConfig config;
+
+	@Inject
+	private Notifier notifier;
 
 	@Provides
 	ImplingsConfig getConfig(ConfigManager configManager)
@@ -94,6 +98,11 @@ public class ImplingsPlugin extends Plugin
 
 		if (impling != null)
 		{
+			if (showImplingType(impling.getImplingType()) == ImplingsConfig.ImplingMode.NOTIFY)
+			{
+				notifier.notify(impling.getImplingType().getName() + " impling is in the area");
+			}
+
 			implings.add(npc);
 		}
 	}
@@ -106,6 +115,11 @@ public class ImplingsPlugin extends Plugin
 
 		if (impling != null && !implings.contains(npc))
 		{
+			if (showImplingType(impling.getImplingType()) == ImplingsConfig.ImplingMode.NOTIFY)
+			{
+				notifier.notify(impling.getImplingType().getName() + " impling is in the area");
+			}
+
 			implings.add(npc);
 		}
 	}
@@ -139,10 +153,11 @@ public class ImplingsPlugin extends Plugin
 			return false;
 		}
 
-		return showImplingType(impling.getImplingType());
+		ImplingsConfig.ImplingMode impMode = showImplingType(impling.getImplingType());
+		return impMode == ImplingsConfig.ImplingMode.HIGHLIGHT || impMode == ImplingsConfig.ImplingMode.NOTIFY;
 	}
 
-	boolean showImplingType(ImplingType implingType)
+	ImplingsConfig.ImplingMode showImplingType(ImplingType implingType)
 	{
 		switch (implingType)
 		{
@@ -164,12 +179,14 @@ public class ImplingsPlugin extends Plugin
 				return config.showMagpie();
 			case NINJA:
 				return config.showNinja();
+			case CRYSTAL:
+				return config.showCrystal();
 			case DRAGON:
 				return config.showDragon();
 			case LUCKY:
 				return config.showLucky();
 			default:
-				return false;
+				return ImplingsConfig.ImplingMode.NONE;
 		}
 	}
 
@@ -202,6 +219,8 @@ public class ImplingsPlugin extends Plugin
 				return config.getMagpieColor();
 			case NINJA:
 				return config.getNinjaColor();
+			case CRYSTAL:
+				return config.getCrystalColor();
 			case DRAGON:
 				return config.getDragonColor();
 			case LUCKY:
